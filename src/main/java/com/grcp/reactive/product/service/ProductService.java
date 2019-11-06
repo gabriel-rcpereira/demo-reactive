@@ -5,7 +5,6 @@ import com.grcp.reactive.persistence.product.repository.ProductRepository;
 import com.grcp.reactive.product.model.ProductVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,8 +15,7 @@ public class ProductService {
     private final ProductRepository repository;
 
     public Mono<Product> createProduct(ProductVo productVo) {
-        return Mono.just(productVo)
-                .map(vo -> buildProduct(vo))
+        return buildProduct(productVo)
                 .flatMap(repository::save);
     }
 
@@ -31,22 +29,22 @@ public class ProductService {
 
     public Mono<Product> updateProduct(String id, ProductVo productVo) {
         return retrieveProduct(id)
-                .flatMap(product -> updateProductEntity(product, productVo))
-                .flatMap(repository::save);
+                .flatMap(product -> updateProduct(product, productVo));
     }
 
     public Mono<Void> deleteProductById(String id) {
         return repository.deleteById(id);
     }
 
-    private Product buildProduct(ProductVo productVo) {
-        return Product.builder()
+    private Mono<Product> buildProduct(ProductVo productVo) {
+        Product product = Product.builder()
                 .name(productVo.getName())
                 .build();
+        return Mono.just(product);
     }
 
-    private Mono<Product> updateProductEntity(Product product, ProductVo productVo) {
+    private Mono<Product> updateProduct(Product product, ProductVo productVo) {
         product.setName(productVo.getName());
-        return Mono.just(product);
+        return repository.save(product);
     }
 }
