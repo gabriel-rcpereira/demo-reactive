@@ -35,7 +35,6 @@ public class ProductService {
 
     private Product buildProduct(ProductVo productVo) {
         return Product.builder()
-                .id(Product.generateId())
                 .name(productVo.getName())
                 .build();
     }
