@@ -3,7 +3,6 @@ package com.grcp.reactive.order.controller;
 import com.grcp.reactive.order.model.OrderVo;
 import com.grcp.reactive.order.service.OrderService;
 import com.grcp.reactive.persistence.order.model.Order;
-import com.grcp.reactive.persistence.product.model.Product;
 import java.net.URI;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -29,13 +27,13 @@ public class OrderController {
             .map(order -> ResponseEntity.created(buildOrderUri(order)).build());
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/order/{id}")
     public Mono<ResponseEntity<Order>> getRetrieveOrderById(@PathVariable("id") String id) {
         return service.retrieveOrderById(id)
                 .map(order -> ResponseEntity.ok(order));
     }
 
-    @GetMapping("/product")
+    @GetMapping("/order")
     public Mono<ResponseEntity<List<Order>>> getFindAllOrders() {
         return service.findAllOrders()
                 .collectList()
