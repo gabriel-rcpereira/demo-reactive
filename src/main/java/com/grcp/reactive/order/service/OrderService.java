@@ -8,7 +8,9 @@ import com.grcp.reactive.persistence.order.repository.OrderRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -20,6 +22,14 @@ public class OrderService {
     public Mono<Order> createOrder(OrderVo orderVo) {
         return buildOrder(orderVo)
                 .flatMap(repository::save);
+    }
+
+    public Mono<Order> retrieveOrderById(String id) {
+        return repository.findById(id);
+    }
+
+    public Flux<Order> findAllOrders() {
+        return repository.findAll();
     }
 
     private Mono<Order> buildOrder(OrderVo orderVo) {
