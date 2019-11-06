@@ -5,6 +5,8 @@ import com.grcp.reactive.persistence.product.repository.ProductRepository;
 import com.grcp.reactive.product.model.ProductVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -21,6 +23,10 @@ public class ProductService {
 
     public Mono<Product> retrieveProduct(String id) {
         return repository.findById(id);
+    }
+
+    public Flux<Product> findAllProducts() {
+        return repository.findAll();
     }
 
     public Mono<Product> updateProduct(String id, ProductVo productVo) {

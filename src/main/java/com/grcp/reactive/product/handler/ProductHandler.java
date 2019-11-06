@@ -1,17 +1,16 @@
 package com.grcp.reactive.product.handler;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import com.grcp.reactive.product.model.ProductVo;
 import com.grcp.reactive.product.service.ProductService;
 
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
-import static org.springframework.http.MediaType.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RequiredArgsConstructor
@@ -38,6 +37,14 @@ public class ProductHandler {
                 .switchIfEmpty(ServerResponse.notFound().build());
     }
 
+    public Mono<ServerResponse> getFindAllProducts(ServerRequest serverRequest) {
+        return service.findAllProducts()
+                .collectList()
+                .flatMap(products -> ServerResponse.ok()
+                        .contentType(APPLICATION_JSON)
+                        .bodyValue(products));
+    }
+
     public Mono<ServerResponse> putUpdateProduct(ServerRequest serverRequest) {
         String id = getIdFromPathParam(serverRequest);
         return serverRequest.bodyToMono(ProductVo.class)
@@ -55,9 +62,5 @@ public class ProductHandler {
     private String getIdFromPathParam(ServerRequest serverRequest) {
         return Optional.ofNullable(serverRequest.pathVariable("id"))
                 .orElseThrow(() -> new IllegalArgumentException());
-    }
-
-    public <T extends ServerResponse> Flux<T> getAll(ServerRequest serverRequest) {
-        return null;
     }
 }
