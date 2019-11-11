@@ -1,17 +1,10 @@
 package com.grcp.reactive.product.exception;
 
+import com.grcp.reactive.exception.BaseException;
 
-import org.springframework.http.HttpStatus;
-
-public class ProductException extends Exception {
-
-    private ProductErrorReason errorReason;
+public class ProductException extends BaseException {
 
     public ProductException(ProductErrorReason errorReason) {
-        super(errorReason.getDescription());
-    }
-
-    public HttpStatus getStatus(){
-        return errorReason.getStatus();
+        super(errorReason.getDescription(), errorReason.getStatus());
     }
 }

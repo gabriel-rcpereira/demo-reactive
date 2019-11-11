@@ -1,10 +1,11 @@
 package com.grcp.reactive.exception.handler;
 
+import com.grcp.reactive.exception.BaseException;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RequestPredicate;
 import org.springframework.web.reactive.function.server.RequestPredicates;
 
 import com.grcp.reactive.exception.model.ErrorResponse;
-import com.grcp.reactive.product.exception.ProductException;
 import java.util.function.Function;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
@@ -34,7 +35,7 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
 
     @Override
     protected RouterFunction<ServerResponse> getRoutingFunction(ErrorAttributes errorAttributes) {
-        return RouterFunctions.route(buildProductPredicate(), this::renderProductErrorResponse);
+        return RouterFunctions.route(buildProductPredicate(), this::renderErrorResponse);
     }
 
     private RequestPredicate buildProductPredicate() {
@@ -44,17 +45,25 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
                 .or(RequestPredicates.GET("/product/*"));
     }
 
-    private Mono<ServerResponse> renderProductErrorResponse(ServerRequest serverRequest) {
+    private Mono<ServerResponse> renderErrorResponse(ServerRequest serverRequest) {
         Throwable error = getError(serverRequest);
         return Mono.just(error)
-                .cast(ProductException.class)
-                .flatMap(getProductExceptionError())
-                .switchIfEmpty(Mono.error(error));
+                .cast(BaseException.class)
+                .flatMap(getCustomError())
+                .switchIfEmpty(buildServerResponse(HttpStatus.INTERNAL_SERVER_ERROR, error.getMessage()));
     }
 
-    private Function<ProductException, Mono<ServerResponse>> getProductExceptionError() {
-        return productException -> ServerResponse.status(productException.getStatus())
-                .bodyValue(ErrorResponse.builder().message(productException.getMessage()).build());
+    private Function<BaseException, Mono<ServerResponse>> getCustomError() {
+        return exception -> buildServerResponse(exception.getErrorStatus(), exception.getMessage());
+    }
+
+    private Mono<ServerResponse> buildServerResponse(HttpStatus status, String errorMessage) {
+        return ServerResponse.status(status)
+                .bodyValue(buildErrorResponse(errorMessage));
+    }
+
+    private ErrorResponse buildErrorResponse(String message) {
+        return ErrorResponse.builder().message(message).build();
     }
 
 }
