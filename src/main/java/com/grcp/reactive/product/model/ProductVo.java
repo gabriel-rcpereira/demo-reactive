@@ -14,5 +14,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProductVo {
 
+    private String id;
     private String name;
 }

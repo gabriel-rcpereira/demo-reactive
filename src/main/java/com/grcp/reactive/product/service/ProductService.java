@@ -2,8 +2,9 @@ package com.grcp.reactive.product.service;
 
 import com.grcp.reactive.persistence.product.model.Product;
 import com.grcp.reactive.persistence.product.repository.ProductRepository;
+import com.grcp.reactive.product.exception.ProductErrorReason;
 import com.grcp.reactive.product.exception.ProductException;
-import static com.grcp.reactive.product.exception.ProductErrorReason.NOT_FOUND;
+import static com.grcp.reactive.product.exception.ProductErrorReason.PRODUCT_NOT_FOUND;
 import com.grcp.reactive.product.model.ProductVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,13 +18,14 @@ public class ProductService {
     private final ProductRepository repository;
 
     public Mono<Product> createProduct(ProductVo productVo) {
-        return buildProduct(productVo)
-                .flatMap(repository::save);
+        return repository.findByName(productVo.getName())
+                .flatMap(product -> Mono.error(new ProductException(ProductErrorReason.PRODUCT_NAME_ALREADY_EXISTS)))
+                .then(buildProduct(productVo).flatMap(repository::save));
     }
 
     public Mono<Product> retrieveProduct(String id) {
         return repository.findById(id)
-                .switchIfEmpty(Mono.error(new ProductException(NOT_FOUND)));
+                .switchIfEmpty(Mono.error(new ProductException(PRODUCT_NOT_FOUND)));
     }
 
     public Flux<Product> findAllProducts() {
@@ -36,7 +38,8 @@ public class ProductService {
     }
 
     public Mono<Void> deleteProductById(String id) {
-        return repository.deleteById(id);
+        return retrieveProduct(id)
+                .flatMap(repository::delete);
     }
 
     private Mono<Product> buildProduct(ProductVo productVo) {

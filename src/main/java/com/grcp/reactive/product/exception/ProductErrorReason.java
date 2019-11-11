@@ -4,7 +4,9 @@ import org.springframework.http.HttpStatus;
 
 public enum ProductErrorReason {
 
-    NOT_FOUND("Product not found.", HttpStatus.NOT_FOUND);
+    PRODUCT_NOT_FOUND("Product not found.", HttpStatus.NOT_FOUND),
+    INVALID_ID_PARAMETER("Invalid Parameter Id.", HttpStatus.BAD_REQUEST),
+    PRODUCT_NAME_ALREADY_EXISTS("Product name already exists.", HttpStatus.PRECONDITION_FAILED);
 
     private String description;
     private HttpStatus status;

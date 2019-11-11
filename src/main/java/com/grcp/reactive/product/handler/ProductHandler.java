@@ -1,14 +1,15 @@
 package com.grcp.reactive.product.handler;
 
-import com.grcp.reactive.persistence.product.model.Product;
-import com.grcp.reactive.product.exception.ProductException;
-import org.springframework.http.HttpStatus;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+
+import com.grcp.reactive.persistence.product.model.Product;
+import com.grcp.reactive.product.exception.ProductErrorReason;
+import com.grcp.reactive.product.exception.ProductException;
+import java.net.URI;
 
 import com.grcp.reactive.product.model.ProductVo;
 import com.grcp.reactive.product.service.ProductService;
 
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
@@ -25,28 +26,17 @@ public class ProductHandler {
     public Mono<ServerResponse> postCreateProduct(ServerRequest serverRequest) {
         return serverRequest.bodyToMono(ProductVo.class)
                 .flatMap(service::createProduct)
-                .flatMap(product ->
-                        ServerResponse.created(UriComponentsBuilder.fromPath("/product/" + product.getId()).build().toUri())
-                                .contentType(APPLICATION_JSON)
-                                .build());
+                .flatMap(product -> ServerResponse.created(buildProductIdUri(product))
+                        .contentType(APPLICATION_JSON)
+                        .build());
     }
 
     public Mono<ServerResponse> getRetrieveProductById(ServerRequest serverRequest) {
-        String id = getIdFromPathParam(serverRequest);
-        return service.retrieveProduct(id)
+        return getIdFromPathParam(serverRequest)
+                .flatMap(service::retrieveProduct)
                 .flatMap(product -> ServerResponse.ok()
                         .contentType(APPLICATION_JSON)
                         .bodyValue(product));
-
-//        return service.retrieveProduct(id)
-////                .onErrorResume(ex -> Mono.error(ex))
-//                .flatMap(product -> ServerResponse.ok()
-//                        .contentType(APPLICATION_JSON)
-//                        .bodyValue(product))
-//                .onErrorResume(ex -> Mono.just(ex).cast(ProductException.class)
-//                        .flatMap(productException ->
-//                                ServerResponse.status(productException.getErrorReason().getStatus())
-//                                        .bodyValue(productException.getMessage())));
     }
 
     public Mono<ServerResponse> getFindAllProducts(ServerRequest serverRequest) {
@@ -58,21 +48,24 @@ public class ProductHandler {
     }
 
     public Mono<ServerResponse> putUpdateProduct(ServerRequest serverRequest) {
-        String id = getIdFromPathParam(serverRequest);
-        return serverRequest.bodyToMono(ProductVo.class)
-                .flatMap(productVo -> service.updateProduct(id, productVo))
-                .then(Mono.from(ServerResponse.ok().build()));
+        return getIdFromPathParam(serverRequest)
+                .flatMap(id -> serverRequest.bodyToMono(ProductVo.class)
+                        .flatMap(productVo -> service.updateProduct(id, productVo))
+                        .then(Mono.from(ServerResponse.noContent().build())));
     }
 
     public Mono<ServerResponse> deleteProductById(ServerRequest serverRequest) {
-        String id = getIdFromPathParam(serverRequest);
-        return Mono.just(id)
+        return getIdFromPathParam(serverRequest)
                 .flatMap(service::deleteProductById)
-                .then(ServerResponse.ok().build());
+                .then(ServerResponse.noContent().build());
     }
 
-    private String getIdFromPathParam(ServerRequest serverRequest) {
-        return Optional.ofNullable(serverRequest.pathVariable("id"))
-                .orElseThrow(() -> new IllegalArgumentException());
+    private Mono<String> getIdFromPathParam(ServerRequest serverRequest) {
+        return Mono.just(serverRequest.pathVariable("id"))
+                .switchIfEmpty(Mono.error(new ProductException(ProductErrorReason.INVALID_ID_PARAMETER)));
+    }
+
+    private URI buildProductIdUri(Product product) {
+        return UriComponentsBuilder.fromPath("/product/" + product.getId()).build().toUri();
     }
 }
