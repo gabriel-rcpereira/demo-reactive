@@ -2,6 +2,8 @@ package com.grcp.reactive.product.service;
 
 import com.grcp.reactive.persistence.product.model.Product;
 import com.grcp.reactive.persistence.product.repository.ProductRepository;
+import com.grcp.reactive.product.exception.ProductException;
+import static com.grcp.reactive.product.exception.ProductErrorReason.NOT_FOUND;
 import com.grcp.reactive.product.model.ProductVo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +22,8 @@ public class ProductService {
     }
 
     public Mono<Product> retrieveProduct(String id) {
-        return repository.findById(id);
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new ProductException(NOT_FOUND)));
     }
 
     public Flux<Product> findAllProducts() {

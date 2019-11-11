@@ -16,8 +16,8 @@ public class ProductRouter {
     @Bean
     public RouterFunction<ServerResponse> routeProduct(ProductHandler handler){
         return route(POST("/product").and(accept(APPLICATION_JSON)), handler::postCreateProduct)
-                .andRoute(GET("/product/{id}").and(accept(APPLICATION_JSON)), handler::getRetrieveProductById)
                 .andRoute(GET("/product").and(accept(APPLICATION_JSON)), handler::getFindAllProducts)
+                .andRoute(GET("/product/{id}").and(accept(APPLICATION_JSON)), handler::getRetrieveProductById)
                 .andRoute(PUT("/product/{id}").and(accept(APPLICATION_JSON)), handler::putUpdateProduct)
                 .andRoute(DELETE("/product/{id}"), handler::deleteProductById);
     }

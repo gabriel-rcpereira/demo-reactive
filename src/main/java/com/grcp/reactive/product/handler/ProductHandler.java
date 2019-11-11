@@ -1,5 +1,8 @@
 package com.grcp.reactive.product.handler;
 
+import com.grcp.reactive.persistence.product.model.Product;
+import com.grcp.reactive.product.exception.ProductException;
+import org.springframework.http.HttpStatus;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.grcp.reactive.product.model.ProductVo;
@@ -33,8 +36,17 @@ public class ProductHandler {
         return service.retrieveProduct(id)
                 .flatMap(product -> ServerResponse.ok()
                         .contentType(APPLICATION_JSON)
-                        .bodyValue(product))
-                .switchIfEmpty(ServerResponse.notFound().build());
+                        .bodyValue(product));
+
+//        return service.retrieveProduct(id)
+////                .onErrorResume(ex -> Mono.error(ex))
+//                .flatMap(product -> ServerResponse.ok()
+//                        .contentType(APPLICATION_JSON)
+//                        .bodyValue(product))
+//                .onErrorResume(ex -> Mono.just(ex).cast(ProductException.class)
+//                        .flatMap(productException ->
+//                                ServerResponse.status(productException.getErrorReason().getStatus())
+//                                        .bodyValue(productException.getMessage())));
     }
 
     public Mono<ServerResponse> getFindAllProducts(ServerRequest serverRequest) {

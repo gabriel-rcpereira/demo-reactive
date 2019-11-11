@@ -23,4 +23,5 @@ public class HelloRouterTest {
                 .expectStatus().isOk()
                 .expectBody(String.class).isEqualTo("Hello, Spring!");
     }
+
 }
